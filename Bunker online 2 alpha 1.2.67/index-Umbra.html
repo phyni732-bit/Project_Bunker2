@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бункер онлайн 2 - виртуальная версия (Авторизован)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            position: relative; 
+        }
+
+        .cont {
+            padding: 20px;
+        }
+
+        /* --- КНОПКА СОЗДАНИЯ КОНТЕНТА (ЛЕВЫЙ ВЕРХНИЙ УГОЛ) --- */
+        .editor {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            text-decoration: none;
+            color: #ffffff;
+            background-color: #1e1e1e;
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid #333333;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+
+        .editor:hover {
+            border-color: #888888;
+            background-color: #252525;
+        }
+
+        .editor:active {
+            transform: scale(0.98);
+        }
+
+        /* --- СТИЛИ БЛОКА ПРОФИЛЯ --- */
+        .profile-link {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #ffffff;
+            background-color: #1e1e1e;
+            padding: 6px 14px;
+            border-radius: 30px;
+            border: 1px solid #333333;
+            transition: all 0.2s ease;
+        }
+
+        .profile-link:hover {
+            border-color: #888888;
+            background-color: #252525;
+        }
+
+        .user-name {
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background-color: #d32f2f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .user-avatar img {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        h1 { 
+            font-size: 3.5rem; 
+            font-weight: 700; 
+            margin-bottom: 10px; 
+            letter-spacing: 2px; 
+            text-transform: uppercase; 
+        }
+
+        p { 
+            font-size: 1.2rem; 
+            color: #888888; 
+            margin-bottom: 50px; 
+            letter-spacing: 1px; 
+        }
+        
+        .play {
+            background-color: #d32f2f; 
+            color: #ffffff; 
+            border: none; 
+            padding: 18px 50px; 
+            font-size: 1.2rem;
+            font-weight: bold; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .play:hover { 
+            background-color: #b71c1c; 
+        }
+
+        .play:active { 
+            transform: scale(0.96); 
+        }
+
+        footer { 
+            position: absolute; 
+            bottom: 30px; 
+            display: flex; 
+            gap: 40px; 
+        }
+
+        footer a { 
+            color: #888888;
+            text-decoration: none; 
+            font-size: 0.9rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            transition: color 0.2s ease; 
+        }
+
+        footer a:hover { 
+            color: #ffffff; 
+        }
+
+        @media (max-width: 600px) {
+            h1 { 
+                font-size: 2.2rem; 
+            }
+
+            .play { 
+                padding: 15px 40px; 
+                font-size: 1rem; 
+            }
+
+            footer { 
+                gap: 20px; 
+                bottom: 20px; 
+                }
+
+            footer a { 
+                font-size: 0.8rem; 
+            }
+
+            .profile-link { 
+                top: 15px; 
+                right: 15px; 
+                padding: 4px 10px; 
+            }
+
+            .user-name { 
+                font-size: 0.9rem; 
+            }
+
+            .user-avatar { 
+                width: 28px; 
+                height: 28px; 
+                font-size: 1rem; 
+            }
+
+            .user-avatar img {
+                width: 24px;
+                height: 24px;
+            }
+
+            .editor-btn {
+                top: 15px;
+                left: 15px;
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="create-content.html" class="editor">Создать контент</a>
+
+    <a href="profile_Umbra.html" class="profile-link">
+        <span class="user-name">Umbra0404</span>
+        <div class="user-avatar">
+            <img src="media/big2.jpg" alt="Аватар Umbra0404">
+        </div>
+    </a>
+
+    <main class="cont">
+        <h1>Бункер онлайн 2</h1>
+        <p>виртуальная версия</p>
+   <button class="play" onclick="window.location.href='game-umbra.html'">Найти игру</button>
+    </main>
+
+    <footer>
+        <a href="index-Umbra.html">Главная</a>
+        <a href="rules_Umbra.html">Правила</a>
+        <a href="about_Umbra.html">О нас</a>
+    </footer>
+
+</body>
+</html>

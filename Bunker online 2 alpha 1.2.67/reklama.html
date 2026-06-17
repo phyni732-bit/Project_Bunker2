@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Case-Strike — Открытие кейсов CS2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #0b0e14;
+      overflow-x: hidden;
+    }
+    .gamer-font { font-family: 'Rajdhani', sans-serif; }
+    
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f131a; }
+    ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #374151; }
+
+    .glow-rare-blue { box-shadow: inset 0 -4px 12px -2px rgba(59, 130, 246, 0.3); border-bottom: 3px solid #3b82f6; }
+    .glow-rare-purple { box-shadow: inset 0 -4px 12px -2px rgba(168, 85, 247, 0.3); border-bottom: 3px solid #a855f7; }
+    .glow-rare-pink { box-shadow: inset 0 -4px 12px -2px rgba(236, 72, 153, 0.3); border-bottom: 3px solid #ec4899; }
+    .glow-rare-red { box-shadow: inset 0 -4px 12px -2px rgba(239, 68, 68, 0.4); border-bottom: 3px solid #ef4444; }
+    .glow-rare-gold { box-shadow: inset 0 -4px 12px -2px rgba(234, 179, 8, 0.4); border-bottom: 3px solid #eab308; }
+
+    .pointer-shadow { filter: drop-shadow(0px 0px 10px rgba(239, 68, 68, 1)); }
+    
+    .skin-img {
+      filter: drop-shadow(0px 5px 5px rgba(0,0,0,0.5));
+      transition: transform 0.3s ease;
+    }
+    .skin-card:hover .skin-img { transform: scale(1.1) rotate(-5deg); }
+
+    @keyframes tension-shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-2px); }
+      50% { transform: translateX(2px); }
+      75% { transform: translateX(-1px); }
+      100% { transform: translateX(0); }
+    }
+    .shake-active { animation: tension-shake 0.1s infinite; }
+
+    @keyframes slide-up-fade {
+      0% { opacity: 0; transform: translateY(20px) scale(0.9); }
+      10% { opacity: 1; transform: translateY(0) scale(1); }
+      90% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-20px) scale(0.9); }
+    }
+    .live-drop-item { animation: slide-up-fade 6s ease-in-out forwards; }
+    
+    .upgrade-slot { background: radial-gradient(circle, rgba(31,41,55,1) 0%, rgba(15,19,26,1) 100%); }
+    
+    /* Стили для скролла кейсов */
+    .cases-scroll::-webkit-scrollbar { height: 4px; }
+    .case-card.active { border-color: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); background-color: #1a1e26; }
+  </style>
+</head>
+<body class="text-gray-100 min-h-screen flex flex-col justify-between relative">
+
+  <div id="bg-danil" class="fixed inset-0 z-[-1] opacity-20 pointer-events-none transition-transform duration-100 ease-out" 
+       style="background-image: url('media/guns/danil.png'); background-size: 40%; background-position: 5% 100%; background-repeat: no-repeat;">
+  </div>
+  <div id="bg-apple" class="fixed inset-0 z-[-1] opacity-20 pointer-events-none transition-transform duration-100 ease-out" 
+       style="background-image: url('media/guns/apple.png'); background-size: 20%; background-position: 110% 105%; background-repeat: no-repeat;">
+  </div>
+
+  <header class="border-b border-gray-800 bg-[#0f1319]/90 backdrop-blur-md px-4 py-3 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition">
+        <div class="bg-red-600 text-white p-2 rounded-lg font-bold tracking-wider gamer-font text-xl shadow-lg shadow-red-600/50 animate-pulse">CASE</div>
+        <span class="text-xl font-bold tracking-widest text-white uppercase gamer-font hidden sm:inline">STRIKE</span>
+      </div>
+      
+      <div class="flex items-center space-x-3 sm:space-x-5">
+        
+        <button id="btn-toggle-sound" class="text-gray-400 hover:text-white transition bg-[#171d26] p-2 rounded-lg border border-gray-800">
+          <i data-lucide="volume-2" id="icon-sound" class="w-5 h-5"></i>
+        </button>
+
+        <button id="btn-open-upgrade" class="flex items-center space-x-2 bg-gradient-to-r from-purple-600/20 to-blue-600/20 hover:from-purple-600/40 hover:to-blue-600/40 px-3 sm:px-4 py-2 rounded-lg border border-purple-500/50 transition transform hover:scale-105 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+          <i data-lucide="arrow-up-circle" class="text-purple-400 w-5 h-5"></i>
+          <span class="font-bold text-gray-200 text-sm hidden sm:block">Апгрейд</span>
+          <span id="inventory-count" class="bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded-full ml-1">0</span>
+        </button>
+
+        <div class="flex items-center space-x-2 bg-[#171d26] px-3 sm:px-4 py-2 rounded-lg border border-gray-800 shadow-inner">
+          <i data-lucide="wallet" class="text-green-400 w-4 h-4 sm:w-5 sm:h-5"></i>
+          <span class="font-bold text-green-400 text-sm sm:text-base" id="user-balance">15 000 ₽</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8 flex flex-col items-center justify-center relative">
+    
+    <div class="w-full max-w-5xl flex justify-end mb-4 text-xs text-gray-500 gamer-font tracking-widest uppercase">
+      <span class="bg-[#0f131a] px-3 py-1 rounded border border-gray-800 shadow-inner">
+        Кейсов открыто сегодня: <span id="global-stats" class="text-red-400 font-bold ml-1">1,342</span>
+      </span>
+    </div>
+
+    <div class="w-full max-w-5xl mb-8">
+      <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 gamer-font flex items-center gap-2">
+        <i data-lucide="layers" class="w-4 h-4"></i> Выберите кейс
+      </h4>
+      <div id="cases-selector" class="flex space-x-4 overflow-x-auto pb-4 cases-scroll">
+        </div>
+    </div>
+
+    <div id="roulette-container" class="w-full max-w-5xl bg-[#0f131a] border border-gray-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden mb-8 transition-all duration-300">
+      <div id="roulette-glow-1" class="absolute -top-24 -left-24 w-64 h-64 bg-red-600/10 rounded-full blur-3xl pointer-events-none transition-colors"></div>
+      <div id="roulette-glow-2" class="absolute -bottom-24 -right-24 w-64 h-64 bg-yellow-600/10 rounded-full blur-3xl pointer-events-none transition-colors"></div>
+
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-800/60">
+        <div class="flex items-center space-x-3">
+          <span id="active-case-dot" class="w-3.5 h-3.5 bg-red-500 rounded-full animate-ping shadow-[0_0_15px_#ef4444] transition-colors"></span>
+          <h3 id="active-case-name" class="text-xl font-bold tracking-wide text-white uppercase gamer-font">Кейс «ИСиП-114 ХАЛЯВА»</h3>
+        </div>
+        <div class="text-sm text-gray-300 bg-[#161c26] px-4 py-1.5 rounded-full border border-gray-700 shadow-inner">
+          Цена: <span id="active-case-price" class="text-yellow-400 font-bold text-base ml-1">450 ₽</span>
+        </div>
+      </div>
+
+      <div class="relative w-full py-5 bg-[#080a0f] rounded-2xl border border-gray-900 overflow-hidden shadow-[inset_0_0_30px_rgba(0,0,0,1)]">
+        <div class="absolute left-1/2 top-0 -translate-x-1/2 z-20 pointer-events-none pointer-shadow">
+          <div id="pointer-top" class="w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[16px] border-t-red-500 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] transition-colors"></div>
+        </div>
+        <div class="absolute left-1/2 bottom-0 -translate-x-1/2 z-20 pointer-events-none pointer-shadow">
+          <div id="pointer-bottom" class="w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-b-[16px] border-b-red-500 drop-shadow-[0_-2px_4px_rgba(0,0,0,0.8)] transition-colors"></div>
+        </div>
+        <div id="pointer-line" class="absolute left-1/2 top-0 bottom-0 w-[2px] bg-red-500/80 z-10 pointer-events-none shadow-[0_0_20px_#ef4444] transition-colors"></div>
+
+        <div class="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#080a0f] to-transparent z-10 pointer-events-none"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#080a0f] to-transparent z-10 pointer-events-none"></div>
+
+        <div id="track-wrapper" class="px-[50%]">
+          <div id="roulette-track" class="flex items-center space-x-2 will-change-transform"></div>
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 relative z-20">
+        <button id="btn-spin" class="w-full sm:w-64 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white font-bold py-4 px-8 rounded-xl shadow-[0_0_25px_rgba(220,38,38,0.5)] hover:shadow-[0_0_35px_rgba(220,38,38,0.7)] text-lg uppercase tracking-wider transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none disabled:transform-none gamer-font">
+          Открыть Кейс
+        </button>
+        <button id="btn-fast-spin" class="w-full sm:w-auto bg-[#171d26] hover:bg-[#202936] text-gray-300 hover:text-white font-medium py-4 px-6 rounded-xl border border-gray-800 hover:border-amber-500/50 transition-all duration-200 text-sm flex items-center justify-center space-x-2">
+          <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+          <span>Быстро (2с)</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="w-full max-w-5xl z-10">
+      <h4 class="text-md font-bold text-gray-400 uppercase tracking-widest mb-4 gamer-font flex items-center gap-2">
+        <i data-lucide="box" class="w-5 h-5"></i> Содержимое кейса
+      </h4>
+      <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 lg:gap-4" id="case-contents-grid">
+        </div>
+    </div>
+    
+    <div class="fixed bottom-4 left-4 z-40 flex flex-col gap-2 pointer-events-none w-64" id="live-drops-container"></div>
+  </main>
+
+  <div id="win-modal" class="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300 backdrop-blur-md">
+    <div class="bg-[#0f131a] border border-gray-800 rounded-3xl p-8 max-w-md w-full text-center relative overflow-hidden transform scale-95 transition-transform duration-300 shadow-2xl">
+      <div id="modal-glow" class="absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full blur-[100px] opacity-40 pointer-events-none"></div>
+      
+      <div class="text-yellow-400 mb-2">
+        <i data-lucide="star" class="w-12 h-12 mx-auto animate-spin-slow"></i>
+      </div>
+      
+      <h2 class="text-3xl font-bold uppercase tracking-wide text-white gamer-font mb-1">Твой дроп!</h2>
+      <p class="text-sm text-gray-400 mb-6" id="modal-subtitle">Кейс успешно открыт</p>
+
+      <div id="modal-skin-card" class="bg-gradient-to-b from-[#141a23] to-[#080a0f] border border-gray-700 rounded-2xl p-6 mb-8 relative shadow-inner">
+        <div class="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-black/60 text-gray-300" id="modal-skin-wear">Factory New</div>
+        <div class="h-32 flex items-center justify-center mb-4 relative z-10">
+          <img id="modal-skin-image" src="" alt="Skin" class="max-h-full max-w-full object-contain filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.9)] transform hover:scale-110 transition-transform duration-300">
+        </div>
+        <h3 id="modal-skin-name" class="font-bold text-xl text-white relative z-10">Имя скина</h3>
+        <p id="modal-skin-category" class="text-xs uppercase tracking-widest mt-1 font-bold relative z-10">Категория</p>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <button id="btn-claim" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-200 tracking-wide uppercase text-sm shadow-[0_0_15px_rgba(22,163,74,0.4)] hover:shadow-[0_0_25px_rgba(22,163,74,0.6)] border border-green-400/30">
+          Оставить (В инвентарь)
+        </button>
+        <button id="btn-sell" class="w-full bg-[#161c26] hover:bg-[#202936] text-yellow-400 hover:text-yellow-300 font-bold py-3.5 px-6 rounded-xl transition-all duration-200 tracking-wide uppercase text-sm border border-gray-700">
+          Продать за <span id="modal-sell-price">0</span> ₽
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="upgrade-modal" class="fixed inset-0 bg-black/95 z-[70] flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300 backdrop-blur-md">
+    <div class="bg-[#0f131a] border border-purple-900/50 rounded-3xl p-6 w-full max-w-4xl flex flex-col relative overflow-hidden transform scale-95 transition-transform duration-300 shadow-[0_0_40px_rgba(168,85,247,0.15)] h-[85vh]">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-40 bg-purple-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+      <div class="flex justify-between items-center mb-6 relative z-10">
+        <h2 class="text-2xl font-bold uppercase tracking-wide text-white gamer-font flex items-center gap-2">
+          <i data-lucide="arrow-up-circle" class="text-purple-500"></i> Апгрейд скинов
+        </h2>
+        <button id="btn-close-upgrade" class="text-gray-400 hover:text-white transition">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <div class="flex flex-col md:flex-row items-center justify-center gap-6 mb-8 relative z-10">
+        <div id="upg-slot-mine" class="upgrade-slot w-48 h-48 rounded-2xl border-2 border-dashed border-gray-700 flex flex-col items-center justify-center p-4 relative cursor-pointer hover:border-purple-500 transition-colors group"></div>
+        <div class="flex flex-col items-center justify-center w-32 shrink-0">
+          <div class="text-3xl font-bold text-white gamer-font" id="upg-chance">0%</div>
+          <div class="text-xs text-gray-400 uppercase tracking-widest mb-4">Шанс успеха</div>
+          <button id="btn-do-upgrade" disabled class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-[0_0_15px_rgba(168,85,247,0.4)] uppercase text-sm disabled:opacity-30 disabled:pointer-events-none transition-all duration-300">UPGRADE</button>
+        </div>
+        <div id="upg-slot-target" class="upgrade-slot w-48 h-48 rounded-2xl border-2 border-dashed border-gray-700 flex flex-col items-center justify-center p-4 relative cursor-pointer hover:border-blue-500 transition-colors group"></div>
+      </div>
+
+      <div class="flex-grow flex flex-col md:flex-row gap-6 overflow-hidden border-t border-gray-800 pt-6 relative z-10">
+        <div class="w-full md:w-1/2 flex flex-col h-full">
+          <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Ваш Инвентарь</h3>
+          <div id="upg-inventory-list" class="flex-grow overflow-y-auto grid grid-cols-2 lg:grid-cols-3 gap-3 pr-2 pb-4"></div>
+        </div>
+        <div class="w-full md:w-1/2 flex flex-col h-full border-t md:border-t-0 md:border-l border-gray-800 md:pl-6 mt-4 md:mt-0 pt-4 md:pt-0">
+          <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Доступно (Выберите цель)</h3>
+          <div id="upg-target-list" class="flex-grow overflow-y-auto grid grid-cols-2 lg:grid-cols-3 gap-3 pr-2 pb-4"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-[#080a0f] border-t border-gray-900 py-6 text-center text-xs text-gray-600 relative z-10">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p>&copy; 2026 Case-Strike. Разработано для ИСиП-114.</p>
+    </div>
+  </footer>
+
+  <script>
+    // --- БАЗЫ ДАННЫХ И КЕЙСЫ ---
+    const DB_BOMJ = [
+      { id: 'bm1', name: 'P250 | Песчаная дюна', category: 'blue', wear: 'Field-Tested', price: 5, image: 'media/guns/duna2.png', chance: 50 },
+      { id: 'bm2', name: 'Nova | Песочная дюна', category: 'blue', wear: 'Well-Worn', price: 8, image: 'media/guns/duna.png', chance: 35 },
+      { id: 'bm3', name: 'MAC-10 | sakuka', category: 'purple', wear: 'Minimal Wear', price: 60, image: 'media/guns/sakuba.png', chance: 14 },
+      { id: 'bm4', name: 'AK-47 | Затерянная земля', category: 'pink', wear: 'Field-Tested', price: 250, image: 'media/guns/zemlya.png', chance: 1 }
+    ];
+
+    const DB_ISIP = [
+      { id: 'b1', name: 'USP-S | Проводник', category: 'blue', wear: 'Field-Tested', price: 85, image: 'media/guns/povog.webp', chance: 25 },
+      { id: 'b2', name: 'Glock-18 | Горелка Бунзена', category: 'blue', wear: 'Factory New', price: 120, image: 'media/guns/moonlight.webp', chance: 25 },
+      { id: 'b3', name: 'M4A4 | Магний', category: 'blue', wear: 'Minimal Wear', price: 190, image: 'media/guns/magni.png', chance: 20 },
+      { id: 'p1', name: 'AK-47 | Ледяной уголь', category: 'purple', wear: 'Field-Tested', price: 950, image: 'media/guns/ice.png', chance: 10 },
+      { id: 'p2', name: 'AWP | Древесная гадюка', category: 'purple', wear: 'Factory New', price: 1100, image: 'media/guns/derevo.webp', chance: 8 },
+      { id: 'pk1', name: 'M4A1-S | Скоростной зверь', category: 'pink', wear: 'Minimal Wear', price: 3400, image: 'media/guns/hyperbeast.png', chance: 5 },
+      { id: 'pk2', name: 'Desert Eagle | Код красный', category: 'pink', wear: 'Field-Tested', price: 2800, image: 'media/guns/code_red.png', chance: 3 },
+      { id: 'r1', name: 'AWP | Dragon Lore', category: 'red', wear: 'Factory New', price: 125000, image: 'media/guns/dragonlore.png', chance: 1.5 },
+      { id: 'r2', name: 'AK-47 | Снежный вихрь', category: 'red', wear: 'Factory New', price: 8500, image: 'media/guns/snow_blizzard.png', chance: 2 },
+      { id: 'g1', name: 'Нож-Бабочка | Волны', category: 'gold', wear: 'Factory New', price: 1000000, image: 'media/guns/knife.png', chance: 0.5 }
+    ];
+
+    const DB_RICH = [
+      { id: 'r_p1', name: 'Desert Eagle | Ржавый кобальт', category: 'purple', wear: 'Factory New', price: 6500, image: 'media/guns/kobalt.webp', chance: 45 },
+      { id: 'r_pk1', name: 'AK-47 | Огненный змей', category: 'pink', wear: 'Minimal Wear', price: 85000, image: 'media/guns/zmei.png', chance: 35 },
+      { id: 'r_r1', name: 'AWP | Гунгнир', category: 'red', wear: 'Factory New', price: 450000, image: 'media/guns/gyngnir.webp', chance: 15 },
+      { id: 'r_g1', name: 'M4A4 | Вой', category: 'gold', wear: 'Factory New', price: 600000, image: 'media/guns/vou.png', chance: 5000 }
+    ];
+
+    const CASES = [
+      { id: 'bomj', name: 'БОМЖ-КЕЙС', price: 45, icon: 'trash-2', color: 'blue', skins: DB_BOMJ },
+      { id: 'isip', name: 'ИСиП-114 ХАЛЯВА', price: 450, icon: 'flame', color: 'red', skins: DB_ISIP },
+      { id: 'rich', name: 'ТАЙНОЕ СОБРАНИЕ', price: 5000, icon: 'crown', color: 'purple', skins: DB_RICH }
+    ];
+
+    const CONFIG = { spinDuration: 5500, fastSpinDuration: 2000, totalCards: 55, targetIndex: 48, cardWidth: 160, cardGap: 8 };
+
+    let state = {
+      activeCase: CASES[1], // По умолчанию ИСиП-114
+      isSpinning: false,
+      balance: 15000,
+      isMuted: false,
+      statsOpened: 1342,
+      lastWinnings: null,
+      inventory: [],
+      upgrade: { mine: null, target: null }
+    };
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const knifeAudio = new Audio('media/knife.mp3');
+    knifeAudio.volume = 0.8;
+
+    function playTick() {
+      if(state.isMuted) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+      } catch (e) {}
+    }
+
+    function playWinSound(category) {
+      if(state.isMuted) return;
+      if (category === 'gold') {
+        knifeAudio.currentTime = 0;
+        knifeAudio.play().catch(e => console.log(e));
+        return;
+      }
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const isEpic = category === 'red';
+        osc.type = isEpic ? 'square' : 'triangle';
+        osc.frequency.setValueAtTime(isEpic ? 440 : 329.63, audioCtx.currentTime); 
+        osc.frequency.setValueAtTime(isEpic ? 554.37 : 392.00, audioCtx.currentTime + 0.1); 
+        osc.frequency.setValueAtTime(isEpic ? 659.25 : 523.25, audioCtx.currentTime + 0.2); 
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+      } catch (e) {}
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      updateBalanceDisplay();
+      renderCaseSelector();
+      selectCase(CASES[1].id); 
+      startLiveDrops();
+      initUpgradeTargetList();
+
+      document.getElementById('btn-spin').addEventListener('click', () => startOpening(false));
+      document.getElementById('btn-fast-spin').addEventListener('click', () => startOpening(true));
+      
+      document.getElementById('btn-claim').addEventListener('click', claimItem);
+      document.getElementById('btn-sell').addEventListener('click', sellItem);
+
+      document.getElementById('btn-open-upgrade').addEventListener('click', openUpgradeModal);
+      document.getElementById('btn-close-upgrade').addEventListener('click', closeUpgradeModal);
+      document.getElementById('btn-do-upgrade').addEventListener('click', executeUpgrade);
+
+      document.getElementById('btn-toggle-sound').addEventListener('click', toggleSound);
+
+      // Эффект параллакса для Данила
+      document.addEventListener('mousemove', (e) => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 30; 
+        const y = (e.clientY / window.innerHeight - 0.5) * 30;
+        const bg = document.getElementById('bg-danil');
+        if(bg) bg.style.transform = `translate(${x}px, ${y}px)`;
+      });
+      document.addEventListener('mousemove', (e) => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 30; 
+        const y = (e.clientY / window.innerHeight - 0.5) * 30;
+        const bg = document.getElementById('bg-apple');
+        if(bg) bg.style.transform = `translate(${x}px, ${y}px)`;
+      });
+      
+      setInterval(() => {
+        state.statsOpened += Math.floor(Math.random() * 3);
+        document.getElementById('global-stats').textContent = state.statsOpened.toLocaleString('ru-RU');
+      }, 5000);
+    });
+
+    function toggleSound() {
+      state.isMuted = !state.isMuted;
+      const icon = document.getElementById('icon-sound');
+      icon.setAttribute('data-lucide', state.isMuted ? 'volume-x' : 'volume-2');
+      lucide.createIcons();
+      document.getElementById('btn-toggle-sound').classList.toggle('text-red-400', state.isMuted);
+    }
+
+    function renderCaseSelector() {
+      const container = document.getElementById('cases-selector');
+      container.innerHTML = '';
+      CASES.forEach(c => {
+        const div = document.createElement('div');
+        div.className = `case-card flex-shrink-0 bg-[#121722] border border-gray-800 rounded-xl p-3 flex items-center space-x-3 cursor-pointer hover:bg-[#161c28] transition-all min-w-[200px]`;
+        div.id = `case-btn-${c.id}`;
+        
+        let colorClass = 'text-gray-400';
+        if(c.color==='blue') colorClass='text-blue-500';
+        if(c.color==='red') colorClass='text-red-500';
+        if(c.color==='purple') colorClass='text-purple-500';
+
+        div.innerHTML = `
+          <div class="bg-gray-900/50 p-2 rounded-lg ${colorClass}"><i data-lucide="${c.icon}" class="w-6 h-6"></i></div>
+          <div>
+            <div class="text-xs font-bold text-white uppercase tracking-wider">${c.name}</div>
+            <div class="text-[10px] text-yellow-400 font-bold mt-0.5">${c.price.toLocaleString('ru-RU')} ₽</div>
+          </div>
+        `;
+        div.onclick = () => selectCase(c.id);
+        container.appendChild(div);
+      });
+      lucide.createIcons();
+    }
+
+    function selectCase(id) {
+      if(state.isSpinning) return;
+      state.activeCase = CASES.find(c => c.id === id);
+      
+      document.querySelectorAll('.case-card').forEach(el => el.classList.remove('active'));
+      document.getElementById(`case-btn-${id}`).classList.add('active');
+
+      document.getElementById('active-case-name').textContent = state.activeCase.name;
+      document.getElementById('active-case-price').textContent = `${state.activeCase.price.toLocaleString('ru-RU')} ₽`;
+
+      // Меняем цвета рулетки под кейс
+      const c = state.activeCase.color;
+      let hex = '#ef4444'; // red
+      if(c === 'blue') hex = '#3b82f6';
+      if(c === 'purple') hex = '#a855f7';
+
+      document.getElementById('active-case-dot').style.backgroundColor = hex;
+      document.getElementById('active-case-dot').style.boxShadow = `0 0 15px ${hex}`;
+      document.getElementById('pointer-top').style.borderTopColor = hex;
+      document.getElementById('pointer-bottom').style.borderBottomColor = hex;
+      document.getElementById('pointer-line').style.backgroundColor = hex;
+      document.getElementById('roulette-glow-1').style.backgroundColor = hex;
+      
+      renderCaseContents();
+      initRoulette();
+    }
+
+    function updateBalanceDisplay() {
+      document.getElementById('user-balance').textContent = `${state.balance.toLocaleString('ru-RU')} ₽`;
+    }
+    
+    function updateInventoryBadge() {
+      document.getElementById('inventory-count').textContent = state.inventory.length;
+    }
+
+    function renderCaseContents() {
+      const grid = document.getElementById('case-contents-grid');
+      grid.innerHTML = '';
+      const sortedSkins = [...state.activeCase.skins].sort((a, b) => b.price - a.price);
+
+      sortedSkins.forEach(skin => {
+        const card = document.createElement('div');
+        let glowClass = 'border-b-2 ';
+        if (skin.category === 'blue') glowClass += 'border-blue-500 shadow-[0_4px_15px_-5px_rgba(59,130,246,0.2)]';
+        if (skin.category === 'purple') glowClass += 'border-purple-500 shadow-[0_4px_15px_-5px_rgba(168,85,247,0.2)]';
+        if (skin.category === 'pink') glowClass += 'border-pink-500 shadow-[0_4px_15px_-5px_rgba(236,72,153,0.2)]';
+        if (skin.category === 'red') glowClass += 'border-red-500 shadow-[0_4px_15px_-5px_rgba(239,68,68,0.3)]';
+        if (skin.category === 'gold') glowClass += 'border-yellow-500 shadow-[0_4px_15px_-5px_rgba(234,179,8,0.3)]';
+
+        card.className = `skin-card bg-[#121721] border border-gray-800 rounded-xl p-3 flex flex-col justify-between hover:bg-[#161c28] transition-colors duration-200 cursor-default ${glowClass}`;
+        card.innerHTML = `
+          <div class="relative w-full h-20 bg-gradient-to-b from-[#1a2130] to-[#0d111a] rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+            <div class="absolute top-1 right-1 bg-black/60 px-1 py-0.5 rounded text-[9px] font-bold text-gray-300 z-10">${skin.chance}%</div>
+            <img src="${skin.image}" alt="${skin.name}" class="skin-img w-[85%] h-[85%] object-contain" onerror="this.src='https://cdn.pixabay.com/photo/2016/03/31/21/53/gun-1296685_1280.png'">
+          </div>
+          <div>
+            <div class="text-[9px] text-gray-500 truncate uppercase font-bold tracking-wider">${skin.wear}</div>
+            <div class="text-xs font-bold text-white truncate leading-tight mt-0.5" title="${skin.name}">${skin.name}</div>
+            <div class="text-xs text-green-400 font-bold mt-1">${skin.price.toLocaleString('ru-RU')} ₽</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function getRandomSkinByChance() {
+      const skins = state.activeCase.skins;
+      const totalChance = skins.reduce((sum, skin) => sum + skin.chance, 0);
+      let rand = Math.random() * totalChance;
+      for (let skin of skins) {
+        if (rand < skin.chance) return skin;
+        rand -= skin.chance;
+      }
+      return skins[0];
+    }
+
+    function createCardElement(skin) {
+      const card = document.createElement('div');
+      card.style.width = `${CONFIG.cardWidth}px`;
+      
+      let rareClass = '', textCol = '';
+      if (skin.category === 'blue') { rareClass = 'glow-rare-blue'; textCol = 'text-blue-400'; }
+      if (skin.category === 'purple') { rareClass = 'glow-rare-purple'; textCol = 'text-purple-400'; }
+      if (skin.category === 'pink') { rareClass = 'glow-rare-pink'; textCol = 'text-pink-400'; }
+      if (skin.category === 'red') { rareClass = 'glow-rare-red'; textCol = 'text-red-400'; }
+      if (skin.category === 'gold') { rareClass = 'glow-rare-gold'; textCol = 'text-yellow-400'; }
+
+      card.className = `flex-shrink-0 bg-[#121722] border border-gray-800 rounded-xl p-3 flex flex-col justify-between relative overflow-hidden ${rareClass}`;
+      card.innerHTML = `
+        <div class="absolute top-1.5 right-1.5 bg-black/50 px-1.5 py-0.5 rounded text-[8px] font-bold text-gray-400 uppercase z-10">${skin.wear}</div>
+        <div class="w-full h-20 flex items-center justify-center my-1 relative">
+           <img src="${skin.image}" class="w-[90%] h-[90%] object-contain filter drop-shadow-lg" onerror="this.src='https://cdn.pixabay.com/photo/2016/03/31/21/53/gun-1296685_1280.png'">
+        </div>
+        <div class="mt-2 text-center border-t border-gray-800/50 pt-2">
+          <div class="text-xs font-bold text-white truncate w-full px-1" title="${skin.name}">${skin.name}</div>
+          <div class="text-[10px] uppercase font-bold tracking-wider mt-0.5 ${textCol}">${getCategoryLabel(skin.category)}</div>
+        </div>
+      `;
+      return card;
+    }
+
+    function getCategoryLabel(cat) {
+      const labels = { 'blue': 'Ширпотреб', 'purple': 'Запрещенное', 'pink': 'Засекреченное', 'red': 'Тайное', 'gold': 'Нож / Перчатки' };
+      return labels[cat] || 'Скин';
+    }
+
+    function initRoulette() {
+      const wrapper = document.getElementById('track-wrapper');
+      wrapper.innerHTML = `<div id="roulette-track" class="flex items-center space-x-2 will-change-transform"></div>`;
+      const track = document.getElementById('roulette-track');
+      for (let i = 0; i < 10; i++) track.appendChild(createCardElement(getRandomSkinByChance()));
+    }
+
+    function startOpening(isFast = false) {
+      if (state.isSpinning) return;
+      if (state.balance < state.activeCase.price) { showCustomError("Недостаточно средств!"); return; }
+
+      state.balance -= state.activeCase.price;
+      updateBalanceDisplay();
+      state.isSpinning = true;
+      toggleButtons(false);
+
+      const wrapper = document.getElementById('track-wrapper');
+      wrapper.innerHTML = `<div id="roulette-track" class="flex items-center space-x-2 will-change-transform transform-gpu"></div>`;
+      const track = document.getElementById('roulette-track');
+
+      const winningSkin = getRandomSkinByChance();
+      state.lastWinnings = Object.assign({}, winningSkin, { uid: Date.now() + Math.random() }); 
+
+      for (let i = 0; i < CONFIG.totalCards; i++) {
+        track.appendChild(createCardElement(i === CONFIG.targetIndex ? winningSkin : getRandomSkinByChance()));
+      }
+
+      const stepWidth = CONFIG.cardWidth + CONFIG.cardGap; 
+      const baseDistance = (CONFIG.targetIndex * stepWidth) + (CONFIG.cardWidth / 2);
+      const randomOffset = (Math.random() * 120) - 60; 
+      
+      const finalTranslateX = -(baseDistance + randomOffset);
+      const duration = isFast ? CONFIG.fastSpinDuration : CONFIG.spinDuration;
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          track.style.transition = `transform ${duration}ms cubic-bezier(0.1, 0.85, 0.15, 1)`;
+          track.style.transform = `translateX(${finalTranslateX}px)`;
+        });
+      });
+
+      let lastTicked = -1;
+      const startTime = performance.now();
+      const container = document.getElementById('roulette-container');
+
+      function trackSound(now) {
+        if (!state.isSpinning) return;
+        const elapsed = now - startTime;
+        
+        if (elapsed < duration) {
+          const progress = elapsed / duration;
+          const easeProgress = 1 - Math.pow(1 - progress, 4); 
+          const currentX = finalTranslateX * easeProgress;
+          const currentIndex = Math.floor(Math.abs(currentX - (CONFIG.cardWidth/2)) / stepWidth);
+          
+          if (currentIndex !== lastTicked) {
+            playTick();
+            lastTicked = currentIndex;
+          }
+
+          if (progress > 0.8 && (winningSkin.category === 'red' || winningSkin.category === 'gold')) {
+             if (!container.classList.contains('shake-active')) container.classList.add('shake-active');
+          }
+          requestAnimationFrame(trackSound);
+        } else {
+          container.classList.remove('shake-active');
+          state.isSpinning = false;
+          playWinSound(winningSkin.category);
+          if (winningSkin.category === 'red' || winningSkin.category === 'gold') fireConfetti();
+          setTimeout(() => showWinModal(winningSkin), 400);
+          toggleButtons(true);
+        }
+      }
+      requestAnimationFrame(trackSound);
+    }
+
+    function toggleButtons(enable) {
+      document.getElementById('btn-spin').disabled = !enable;
+      document.getElementById('btn-fast-spin').disabled = !enable;
+      document.querySelectorAll('.case-card').forEach(c => c.style.pointerEvents = enable ? 'auto' : 'none');
+    }
+
+    function fireConfetti() {
+      if (typeof confetti !== 'undefined') {
+        var duration = 3000;
+        var end = Date.now() + duration;
+        (function frame() {
+          confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#ef4444', '#eab308', '#ffffff'] });
+          confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#ef4444', '#eab308', '#ffffff'] });
+          if (Date.now() < end) requestAnimationFrame(frame);
+        }());
+      }
+    }
+
+    function showWinModal(skin) {
+      if (skin.category === 'gold') showKnifeAnimation();
+      
+      // РАЗБЛОКИРУЕМ КНОПКИ ДЛЯ НОВОГО ДРОПА
+      document.getElementById('btn-claim').disabled = false;
+      document.getElementById('btn-sell').disabled = false;
+
+      const modal = document.getElementById('win-modal');
+      const colors = { 'blue':'#3b82f6', 'purple':'#a855f7', 'pink':'#ec4899', 'red':'#ef4444', 'gold':'#eab308' };
+      const color = colors[skin.category] || '#fff';
+
+      document.getElementById('modal-glow').style.backgroundColor = color;
+      
+      const img = document.getElementById('modal-skin-image');
+      img.src = skin.image;
+      img.onerror = () => img.src = 'https://cdn.pixabay.com/photo/2016/03/31/21/53/gun-1296685_1280.png';
+      
+      document.getElementById('modal-skin-name').textContent = skin.name;
+      const catEl = document.getElementById('modal-skin-category');
+      catEl.textContent = getCategoryLabel(skin.category);
+      catEl.style.color = color;
+      
+      document.getElementById('modal-skin-wear').textContent = skin.wear;
+      document.getElementById('modal-sell-price').textContent = skin.price.toLocaleString('ru-RU');
+      
+      const sub = document.getElementById('modal-subtitle');
+      if(skin.category === 'gold') sub.innerHTML = '<span class="text-yellow-400 font-bold drop-shadow-[0_0_5px_#eab308]">ОГО! ВЫБИЛ НОЖ!</span>';
+      else if(skin.category === 'red') sub.innerHTML = '<span class="text-red-400 font-bold drop-shadow-[0_0_5px_#ef4444]">ОТЛИЧНЫЙ ДРОП!</span>';
+      else sub.textContent = 'Кейс успешно открыт';
+
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        modal.classList.add('opacity-100');
+        modal.firstElementChild.classList.remove('scale-95');
+        modal.firstElementChild.classList.add('scale-100');
+      });
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('win-modal');
+      modal.classList.remove('opacity-100');
+      modal.firstElementChild.classList.remove('scale-100');
+      modal.firstElementChild.classList.add('scale-95');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    // ИСПРАВЛЕНИЕ: БЛОКИРОВКА КНОПКИ ПОСЛЕ НАЖАТИЯ
+    function claimItem() {
+      if (!state.lastWinnings || document.getElementById('btn-claim').disabled) return;
+      
+    
+      
+      state.inventory.push(state.lastWinnings);
+      updateInventoryBadge();
+      
+      const btnIcon = document.querySelector('#btn-open-upgrade i');
+      btnIcon.classList.add('text-green-400', 'scale-125');
+      setTimeout(() => btnIcon.classList.remove('text-green-400', 'scale-125'), 500);
+      
+      closeModal();
+    }
+
+    // ИСПРАВЛЕНИЕ: БЛОКИРОВКА ПРИ ПРОДАЖЕ
+    function sellItem() {
+      if (!state.lastWinnings || document.getElementById('btn-sell').disabled) return;
+      
+      document.getElementById('btn-claim').disabled = true;
+      document.getElementById('btn-sell').disabled = true;
+
+      state.balance += state.lastWinnings.price;
+      state.lastWinnings = null;
+      updateBalanceDisplay();
+      closeModal();
+      
+      const b = document.getElementById('user-balance');
+      b.classList.add('text-green-400', 'scale-110');
+      setTimeout(() => b.classList.remove('text-green-400', 'scale-110'), 500);
+    }
+
+    function showCustomError(msg) {
+      const div = document.createElement('div');
+      div.className = 'fixed top-5 right-5 z-[100] bg-[#161313] border-l-4 border-red-500 text-white px-5 py-4 rounded-xl shadow-2xl flex items-center space-x-3 transition-all duration-300 transform translate-x-10 opacity-0';
+      div.innerHTML = `<i data-lucide="alert-triangle" class="text-red-500 w-6 h-6"></i><div><h4 class="font-bold text-sm uppercase">Ошибка</h4><p class="text-xs text-gray-400">${msg}</p></div>`;
+      document.body.appendChild(div);
+      lucide.createIcons();
+      requestAnimationFrame(() => div.classList.remove('translate-x-10', 'opacity-0'));
+      setTimeout(() => {
+        div.classList.add('translate-x-10', 'opacity-0');
+        setTimeout(() => div.remove(), 300);
+      }, 3000);
+    }
+
+    function startLiveDrops() {
+      const container = document.getElementById('live-drops-container');
+      const names = ['h$king666', 'The Original', 'ne vazhno', 'ИСиП_Топ', 'umbra', 'wimbo', 'madk1d', 'egor kridd'];
+      
+      // Берем скины из ИСиП кейса для ленты
+      setInterval(() => {
+        const skins = DB_ISIP;
+        const totalChance = skins.reduce((sum, skin) => sum + skin.chance, 0);
+        let rand = Math.random() * totalChance;
+        let skin = skins[0];
+        for (let s of skins) { if (rand < s.chance) { skin = s; break; } rand -= s.chance; }
+
+        if(skin.category === 'blue' && Math.random() > 0.3) return; 
+        
+        const div = document.createElement('div');
+        div.className = 'live-drop-item bg-[#121722]/90 backdrop-blur border border-gray-800 rounded-lg p-2 flex items-center gap-3 shadow-lg';
+        
+        let color = 'text-gray-400';
+        if(skin.category==='red') color = 'text-red-400';
+        if(skin.category==='gold') color = 'text-yellow-400';
+
+        div.innerHTML = `
+          <div class="w-10 h-10 bg-[#080a0f] rounded flex items-center justify-center p-1 shrink-0">
+            <img src="${skin.image}" class="max-w-full max-h-full object-contain" onerror="this.style.display='none'">
+          </div>
+          <div class="overflow-hidden">
+            <div class="text-[10px] text-gray-500 truncate">${names[Math.floor(Math.random()*names.length)]} выбил:</div>
+            <div class="text-xs font-bold ${color} truncate">${skin.name}</div>
+          </div>
+        `;
+        
+        container.prepend(div);
+        if(container.children.length > 3) container.lastElementChild.remove();
+        setTimeout(() => { if (div.parentNode) div.remove(); }, 5800);
+      }, 1500); 
+    }
+
+    function showKnifeAnimation() {
+      const gifPath = 'media/guns/67.gif';
+      const positions = [ { left: '2%', top: '50%', transform: 'translateY(-50%)' }, { right: '2%', top: '50%', transform: 'translateY(-50%)' } ];
+      positions.forEach(pos => {
+        const img = document.createElement('img');
+        img.src = gifPath;
+        img.style.position = 'fixed';
+        img.style.zIndex = '9999';
+        img.style.width = '300px'; 
+        Object.assign(img.style, pos);
+        document.body.appendChild(img);
+        setTimeout(() => img.remove(), 7000);
+      });
+    }
+
+    // --- АПГРЕЙДЫ ---
+    function getAllUniqueSkins() {
+      const allSkins = [...DB_BOMJ, ...DB_ISIP, ...DB_RICH];
+      // Убираем дубликаты по ID, если вдруг пересекаются
+      const unique = Array.from(new Map(allSkins.map(item => [item.id, item])).values());
+      return unique.sort((a, b) => a.price - b.price);
+    }
+
+    function initUpgradeTargetList() {
+      const list = document.getElementById('upg-target-list');
+      const sorted = getAllUniqueSkins();
+      
+      sorted.forEach(skin => {
+        const div = document.createElement('div');
+        div.className = `bg-[#121721] border border-gray-800 rounded-xl p-2 cursor-pointer hover:bg-[#161c28] hover:border-blue-500 flex flex-col items-center justify-center transition-all`;
+        div.innerHTML = `<img src="${skin.image}" class="w-16 h-16 object-contain mb-1" onerror="this.src='https://cdn.pixabay.com/photo/2016/03/31/21/53/gun-1296685_1280.png'"><div class="text-[10px] text-white truncate w-full text-center">${skin.name}</div><div class="text-[10px] text-green-400">${skin.price.toLocaleString('ru-RU')} ₽</div>`;
+        div.onclick = () => {
+          state.upgrade.target = skin;
+          renderUpgradeSlots();
+        };
+        list.appendChild(div);
+      });
+    }
+
+    function openUpgradeModal() {
+      state.upgrade = { mine: null, target: null };
+      renderUpgradeSlots();
+      renderUpgradeInventory();
+      
+      const modal = document.getElementById('upgrade-modal');
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        modal.classList.add('opacity-100');
+        modal.firstElementChild.classList.remove('scale-95');
+        modal.firstElementChild.classList.add('scale-100');
+      });
+    }
+
+    function closeUpgradeModal() {
+      const modal = document.getElementById('upgrade-modal');
+      modal.classList.remove('opacity-100');
+      modal.firstElementChild.classList.remove('scale-100');
+      modal.firstElementChild.classList.add('scale-95');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    function renderUpgradeSlots() {
+      const slotMine = document.getElementById('upg-slot-mine');
+      if (state.upgrade.mine) {
+        slotMine.innerHTML = `<img src="${state.upgrade.mine.image}" class="w-24 h-24 object-contain filter drop-shadow-lg mb-2" onerror="this.src='https://cdn.pixabay.com/photo/2016/03/31/21/53/gun-1296685_1280.png'"><div class="text-xs text-white font-bold text-center">${state.upgrade.mine.name}</div><div class="text-xs text-green-400 mt-1">${state.upgrade.mine.price.toLocaleString('ru-RU')} ₽</div>`;
+        slotMine.classList.add('border-purple-500', 'bg-purple-900/20');
+        slotMine.className = 'upgrade-slot w-48 h-48 rounded-2xl border-2 border-purple-500 bg-purple-900/20 flex flex-col items-center justify-center p-4 relative cursor-pointer';
+      } else {
+        slotMine.innerHTML = `<div class="text-gray-500 text-center text-sm"><i data-lucide="plus-circle" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>Выберите из инвентаря</div>`;
+        slotMine.className = 'upgrade-slot w-48 h-48 rounded-2xl border-2 border-dashed border-gray-700 flex flex-col items-center justify-center p-4 relative cursor-pointer hover:border-purple-500 transition-colors group';
+      }
+
+      const slotTarget = document.getElementById('upg-slot-target');
+      if (state.upgrade.target) {
+        slotTarget.innerHTML = `<img src="${state.upgrade.target.image}" class="w-24 h-24 object-contain filter drop-shadow-lg mb-2" onerror="this.src='https://cdn.pixabay.com/photo/2016/03/31/21/53/gun-1296685_1280.png'"><div class="text-xs text-white font-bold text-center">${state.upgrade.target.name}</div><div class="text-xs text-green-400 mt-1">${state.upgrade.target.price.toLocaleString('ru-RU')} ₽</div>`;
+        slotTarget.className = 'upgrade-slot w-48 h-48 rounded-2xl border-2 border-blue-500 bg-blue-900/20 flex flex-col items-center justify-center p-4 relative cursor-pointer';
+      } else {
+        slotTarget.innerHTML = `<div class="text-gray-500 text-center text-sm"><i data-lucide="crosshair" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>Выберите цель</div>`;
+        slotTarget.className = 'upgrade-slot w-48 h-48 rounded-2xl border-2 border-dashed border-gray-700 flex flex-col items-center justify-center p-4 relative cursor-pointer hover:border-blue-500 transition-colors group';
+      }
+
+      lucide.createIcons();
+      calculateUpgradeChance();
+    }
+
+    function calculateUpgradeChance() {
+      const chanceEl = document.getElementById('upg-chance');
+      const btn = document.getElementById('btn-do-upgrade');
+      
+      if (state.upgrade.mine && state.upgrade.target) {
+        let chance = (state.upgrade.mine.price / state.upgrade.target.price) * 100;
+        if (chance > 80) chance = 80; 
+        
+        if (chance < 1) {
+          chanceEl.textContent = '<1%';
+          chanceEl.className = 'text-3xl font-bold text-red-500 gamer-font';
+        } else {
+          chanceEl.textContent = chance.toFixed(1) + '%';
+          chanceEl.className = `text-3xl font-bold gamer-font ${chance > 40 ? 'text-green-400' : 'text-yellow-400'}`;
+        }
+        btn.disabled = false;
+      } else {
+        chanceEl.textContent = '0%';
+        chanceEl.className = 'text-3xl font-bold text-white gamer-font';
+        btn.disabled = true;
+      }
+    }
+
+    function renderUpgradeInventory() {
+      const list = document.getElementById('upg-inventory-list');
+      list.innerHTML = '';
+      if (state.inventory.length === 0) {
+        list.innerHTML = `<div class="col-span-full text-center text-gray-600 text-sm py-10">Инвентарь пуст. Откройте кейс!</div>`;
+        return;
+      }
+
+      state.inventory.forEach(skin => {
+        const div = document.createElement('div');
+        const isSelected = state.upgrade.mine && state.upgrade.mine.uid === skin.uid;
+        div.className = `bg-[#121721] border ${isSelected ? 'border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.3)]' : 'border-gray-800'} rounded-xl p-2 cursor-pointer hover:bg-[#161c28] flex flex-col items-center justify-center transition-all`;
+        div.innerHTML = `<img src="${skin.image}" class="w-16 h-16 object-contain mb-1" onerror="this.src='https://cdn.pixabay.com/photo/2016/03/31/21/53/gun-1296685_1280.png'"><div class="text-[10px] text-white truncate w-full text-center">${skin.name}</div><div class="text-[10px] text-green-400">${skin.price.toLocaleString('ru-RU')} ₽</div>`;
+        div.onclick = () => {
+          state.upgrade.mine = skin;
+          renderUpgradeSlots();
+          renderUpgradeInventory(); 
+        };
+        list.appendChild(div);
+      });
+    }
+
+    function executeUpgrade() {
+      if (!state.upgrade.mine || !state.upgrade.target) return;
+      
+      const minePrice = state.upgrade.mine.price;
+      const targetPrice = state.upgrade.target.price;
+      
+      let rawChance = (minePrice / targetPrice) * 100;
+      let finalChance = rawChance > 80 ? 80 : rawChance;
+      
+      const roll = Math.random() * 100;
+      const isSuccess = roll <= finalChance;
+      
+      state.inventory = state.inventory.filter(s => s.uid !== state.upgrade.mine.uid);
+      updateInventoryBadge();
+
+      const btn = document.getElementById('btn-do-upgrade');
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader" class="animate-spin w-5 h-5 mx-auto"></i>`;
+      lucide.createIcons();
+      
+      setTimeout(() => {
+        if (isSuccess) {
+          const newSkin = Object.assign({}, state.upgrade.target, { uid: Date.now() + Math.random() });
+          state.inventory.push(newSkin);
+          updateInventoryBadge();
+          
+          btn.innerHTML = 'УСПЕХ!';
+          btn.className = 'w-full bg-gradient-to-r from-green-600 to-green-500 text-white font-bold py-3 px-4 rounded-xl shadow-[0_0_15px_rgba(22,163,74,0.4)] uppercase text-sm transition-all duration-300';
+          fireConfetti();
+        } else {
+          btn.innerHTML = 'СГОРЕЛ...';
+          btn.className = 'w-full bg-gradient-to-r from-red-600 to-red-800 text-white font-bold py-3 px-4 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] uppercase text-sm transition-all duration-300';
+        }
+
+        setTimeout(() => {
+          btn.innerHTML = 'UPGRADE';
+          btn.className = 'w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-[0_0_15px_rgba(168,85,247,0.4)] uppercase text-sm disabled:opacity-30 disabled:pointer-events-none transition-all duration-300';
+          state.upgrade.mine = null; 
+          renderUpgradeSlots();
+          renderUpgradeInventory();
+        }, 2000);
+      }, 1500);
+    }
+  </script>
+</body>
+</html>

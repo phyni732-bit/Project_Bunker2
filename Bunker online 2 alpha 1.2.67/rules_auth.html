@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Правила - Бункер онлайн 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff; 
+            /* Убрали жесткую высоту и центрирование, чтобы работал скролл */
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+        
+        .rules-cont {
+            background-color: #1e1e1e;
+            padding: 40px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto; /* Центрируем блок по горизонтали */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #d32f2f;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        p {
+            font-size: 1.05rem;
+            color: #cccccc;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            color: #cccccc;
+            margin-bottom: 20px;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 30px;
+            color: #888888;
+            text-decoration: none;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.2s ease;
+        }
+        .back:hover {
+            color: #ffffff;
+        }
+
+        @media (max-width: 600px) {
+            .rules-cont {
+                padding: 20px;
+            }
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="rules-cont">
+        <h1>Правила игры</h1>
+        
+        <h2>1. Суть игры</h2>
+        <p>На Земле произошла глобальная катастрофа. Вы — один из немногих выживших, стоящих перед входом в спасательный Бункер. Однако мест в Бункере хватит не на всех. Ваша задача — доказать остальным, что именно вы достойны попасть внутрь и стать частью нового человечества.</p>
+
+        <h2>2. Характеристики</h2>
+        <p>Каждый игрок получает случайный набор характеристик, которые описывают его персонажа:</p>
+        <ul>
+            <li>Профессия и стаж работы;</li>
+            <li>Биология (возраст, пол, здоровье);</li>
+            <li>Хобби и полезные навыки;</li>
+            <li>Фобии или негативные черты;</li>
+            <li>Специальные карты действий (багаж).</li>
+        </ul>
+
+        <h2>3. Ход игры</h2>
+        <p>Игра делится на несколько раундов. В каждом раунде игроки по очереди открывают по одной своей характеристике и объясняют, почему эта черта полезна для выживания Бункера.</p>
+        <p>После обсуждения проводится голосование. Тот, кто наберет больше всего голосов "против", изгоняется и лишается шанса на спасение. Игра продолжается до тех пор, пока не останется необходимое количество выживших (обычно половина от стартового числа игроков).</p>
+
+        <h2>4. Победа</h2>
+        <p>Вы побеждаете, если смогли убедить группу оставить вас в Бункере до конца финального голосования.</p>
+
+        <!--назад -->
+        <a href="index-auth.html" class="back">← На главную</a>
+    </main>
+
+</body>
+</html>

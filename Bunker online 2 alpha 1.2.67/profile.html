@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль игрока - Бункер онлайн 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        
+        .profile-cont {
+            background-color: #1e1e1e;
+            padding: 40px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .big-avatar {
+            width: 90px;
+            height: 90px;
+            background-color: #d32f2f;
+            border-radius: 50%;
+            margin: 0 auto 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status {
+            font-size: 1rem;
+            color: #888888;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        .stats-box {
+            background-color: #121212;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .stats-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        .stats-line:last-child {
+            margin-bottom: 0;
+        }
+        .stats-label { color: #888888; }
+        .stats-val { font-weight: bold; color: #ffffff; }
+
+        .back {
+            display: inline-block;
+            color: #888888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .back:hover {
+            color: #ffffff;
+        }
+
+        @media (max-width: 450px) {
+            .profile-cont {
+                padding: 30px 20px;
+                border-radius: 0;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="profile-cont">
+        <div class="big-avatar">👤</div>
+        <h2>Петрушка</h2>
+        <p class="status">Выживший</p>
+        
+        <div class="stats-box">
+            <div class="stats-line">
+                <span class="stats-label">Сыграно игр:</span>
+                <span class="stats-val">0</span>
+            </div>
+            <div class="stats-line">
+                <span class="stats-label">Выиграно в бункере:</span>
+                <span class="stats-val">0</span>
+            </div>
+            <div class="stats-line">
+                <span class="stats-label">Уровень допуска:</span>
+                <span class="stats-val">Alpha-1</span>
+            </div>
+        </div>
+
+        <a href="index-auth.html" class="back">← На главную</a>
+    </main>
+
+</body>
+</html>

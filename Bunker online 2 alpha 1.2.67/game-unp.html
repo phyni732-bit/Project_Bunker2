@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Бункер — Игровой стол</title>
+<style>
+:root {
+  --bg: #121212;
+  --s1: #1e1e1e;
+  --border: #333333;
+  --accent: #d32f2f;
+  --accent-hover: #b71c1c;
+  --text: #ffffff;
+  --muted: #888888;
+  --dim: #555555;
+  --green: #4caf50;
+}
+
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+}
+
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+  background-color: var(--bg); 
+  color: var(--text); 
+  min-height: 100vh; 
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── LOADING ── */
+#ls {
+  position: fixed; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 24px;
+  background: var(--bg); z-index: 100;
+}
+.l-title { font-size: 3rem; font-weight: 700; text-transform: uppercase; letter-spacing: 5px; color: var(--accent); }
+.l-sub   { font-size: 1rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+.l-dots  { display: flex; gap: 8px; }
+.l-dot   { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: background 0.3s, transform 0.3s; }
+.l-dot.on{ background: var(--accent); transform: scale(1.3); }
+.l-bar-wrap { width: 240px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.l-bar  { height: 100%; width: 0%; background: var(--accent); transition: width 0.08s linear; }
+.l-msg  { font-size: 0.9rem; letter-spacing: 1px; color: var(--muted); }
+
+/* ── GAME ── */
+#gs { display: none; flex-direction: column; flex: 1; }
+
+/* header */
+.hdr { display: flex; align-items: center; justify-content: space-between; padding: 15px 30px; background-color: var(--s1); border-bottom: 1px solid var(--border); }
+.hdr-logo { font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text); }
+.hdr-mid  { font-size: 0.9rem; letter-spacing: 1px; color: var(--muted); display: flex; align-items: center; gap: 8px; text-transform: uppercase;}
+.hdr-dot  { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: blink 1.6s infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.hdr-round{ font-size: 0.9rem; font-weight: bold; letter-spacing: 1px; color: var(--text); text-transform: uppercase; }
+
+/* disaster */
+.disaster { padding: 15px 30px; border-bottom: 1px solid var(--border); background: var(--bg); display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+.dis-tag  { font-size: 0.8rem; font-weight: bold; letter-spacing: 1px; color: var(--text); background: var(--accent); padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
+.dis-text { font-size: 1rem; color: var(--text); letter-spacing: 0.5px; }
+
+/* section label */
+.sec-label { font-size: 0.9rem; font-weight: bold; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 15px; display: block;}
+
+/* ── TURN BANNER ── */
+.turn-banner {
+  padding: 12px 30px; border-bottom: 1px solid var(--border);
+  background: var(--bg); display: flex; align-items: center; gap: 10px;
+}
+.turn-who { font-size: 1rem; font-weight: bold; letter-spacing: 1px; }
+.turn-who.my { color: var(--accent); }
+.turn-who.bot{ color: var(--text); }
+.turn-indicator { font-size: 0.9rem; color: var(--muted); text-transform: uppercase; }
+
+/* ── BOTS ── */
+.bots-wrap { padding: 20px 30px; border-bottom: 1px solid var(--border); background: var(--bg); }
+.bots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+.bot {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: 8px; padding: 15px; position: relative; transition: border-color 0.3s;
+}
+.bot.active-turn { border-color: var(--accent); box-shadow: 0 0 10px rgba(211,47,47,0.2); }
+.bot.out { opacity: 0.4; filter: grayscale(1); border-color: var(--dim); }
+.bot.out::after {
+  content: 'ИЗГНАН'; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(-10deg);
+  font-size: 1.2rem; font-weight: bold; letter-spacing: 2px;
+  color: var(--accent); border: 2px solid var(--accent); padding: 5px 10px; border-radius: 6px;
+}
+.bot-name { font-size: 1.1rem; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 10px; color: var(--text);}
+.bot-pips { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 5px;}
+.pip      { width: 20px; height: 6px; background: var(--bg); border-radius: 3px; transition: background 0.3s; }
+.pip.open { background: var(--accent); }
+.bot-msg  { margin-top: 10px; font-size: 0.85rem; color: var(--muted); min-height: 14px; font-style: italic; }
+
+/* revealed card chip on bot */
+.bot-reveal-chip {
+  margin-top: 10px; font-size: 0.8rem; font-weight: bold;
+  color: var(--text); background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; padding: 4px 8px; display: inline-block; text-transform: uppercase;
+}
+
+/* ── VOTE ── */
+.vote-wrap { padding: 20px 30px; border-bottom: 1px solid var(--border); background: var(--s1); display: none; }
+.vote-wrap.on { display: block; }
+.vote-title { font-size: 1.2rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); margin-bottom: 15px; }
+.vote-btns  { display: flex; flex-wrap: wrap; gap: 10px; }
+.vbtn {
+  font-family: inherit; font-size: 0.9rem; font-weight: bold; letter-spacing: 1px;
+  background: var(--bg); color: var(--text); border: 1px solid var(--border);
+  padding: 12px 20px; cursor: pointer; text-transform: uppercase; border-radius: 6px; 
+  transition: background 0.2s, transform 0.1s;
+}
+.vbtn:hover { background: var(--accent); border-color: var(--accent); }
+.vbtn:active { transform: scale(0.96); }
+
+/* ── PLAYER CARDS ── */
+.player-wrap { padding: 30px; background: var(--bg); flex: 1; }
+.player-hdr  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; flex-wrap: wrap; gap: 10px;}
+.player-id   { display: flex; align-items: center; gap: 15px; }
+.p-avatar {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--accent);
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold;
+}
+.p-name    { font-size: 1.2rem; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;}
+.imm-badge { font-size: 0.7rem; font-weight: bold; letter-spacing: 1px; color: var(--text); border: 1px solid var(--text); padding: 4px 8px; border-radius: 4px; }
+.cards-hint{ font-size: 0.9rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase;}
+
+.cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 800px; margin: 0 auto;}
+@media(max-width: 700px){ .cards-grid{ grid-template-columns: repeat(2, 1fr); } }
+@media(max-width: 450px){ .cards-grid{ grid-template-columns: 1fr; } }
+
+/* single card */
+.pcard {
+  border: 1px solid var(--border); border-radius: 8px; background: var(--s1);
+  overflow: hidden; min-height: 160px; display: flex; flex-direction: column;
+  transition: border-color 0.3s, transform 0.2s; position: relative;
+}
+.pcard:hover:not(.shared):not(.locked) { border-color: var(--muted); transform: translateY(-3px); }
+.pcard.shared { border-color: var(--border); opacity: 0.7; }
+
+.pcard.locked .pc-foot { opacity: 0.5; cursor: not-allowed; }
+.pcard.my-turn-highlight { border-color: var(--accent) !important; }
+
+.pc-head  { padding: 12px 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--bg); }
+.pc-icon  { font-size: 1.2rem; }
+.pc-type  { font-size: 0.8rem; font-weight: bold; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+.pc-body  { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px 15px; }
+.pc-val   { font-size: 1.1rem; font-weight: bold; letter-spacing: 0.5px; text-align: center; color: var(--text); }
+.pc-val.special { color: var(--accent); }
+.pc-foot  { border-top: 1px solid var(--border); padding: 10px; text-align: center;}
+.pc-btn {
+  width: 100%; font-family: inherit; font-size: 0.9rem; font-weight: bold; letter-spacing: 1px;
+  background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 10px 0; cursor: pointer;
+  text-transform: uppercase; transition: background 0.2s, transform 0.1s;
+}
+.pc-btn:not(:disabled):hover { background: var(--accent); border-color: var(--accent); }
+.pc-btn:active { transform: scale(0.96); }
+
+.shared-tag {
+  position: absolute; top: 12px; right: 12px; font-size: 0.7rem; font-weight: bold; letter-spacing: 1px;
+  color: var(--text); background: var(--accent); padding: 3px 8px; border-radius: 4px; text-transform: uppercase; 
+}
+
+@keyframes revealFlash{ 0%{background: rgba(211,47,47,0.3)} 100%{background: var(--s1)} }
+.pcard.flash { animation: revealFlash 0.6s ease-out; }
+
+/* ── LOG ── */
+.log { border-top: 1px solid var(--border); padding: 15px 30px; max-height: 150px; overflow-y: auto; background: var(--bg); }
+.log-row { font-size: 0.9rem; color: var(--muted); letter-spacing: 0.5px; padding: 4px 0; border-bottom: 1px solid var(--border); animation: fadeSlide 0.3s ease; }
+@keyframes fadeSlide{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.log-row .ts { color: var(--dim); margin-right: 10px; font-size: 0.8rem; }
+.r  { color: var(--accent); font-weight: bold;}
+.g  { color: var(--text); font-weight: bold;}
+.gr { color: var(--green); font-weight: bold;}
+
+/* ── MODAL ── */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 200; }
+.modal-bg.on { display: flex; }
+.modal { 
+  background-color: var(--s1); 
+  border-radius: 12px; 
+  padding: 40px; 
+  max-width: 400px; 
+  width: 90%; 
+  text-align: center; 
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+}
+.modal-t { font-size: 2rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
+.modal-t.win { color: var(--green); }
+.modal-t.lose{ color: var(--accent); }
+.modal-b { font-size: 1rem; color: var(--muted); line-height: 1.6; margin-bottom: 30px; }
+.modal-btn { 
+  width: 100%;
+  font-family: inherit; font-size: 1.1rem; font-weight: bold; letter-spacing: 1px; 
+  background: var(--accent); color: #fff; border: none; padding: 16px; cursor: pointer; border-radius: 6px; text-transform: uppercase;
+  transition: background 0.2s, transform 0.1s; 
+}
+.modal-btn:hover { background: var(--accent-hover); }
+.modal-btn:active { transform: scale(0.98); }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div id="ls">
+  <div class="l-title">БУНКЕР</div>
+  <div class="l-sub">Поиск игроков</div>
+  <div class="l-dots">
+    <div class="l-dot"></div><div class="l-dot"></div><div class="l-dot"></div>
+    <div class="l-dot"></div><div class="l-dot"></div><div class="l-dot"></div>
+  </div>
+  <div class="l-bar-wrap"><div class="l-bar" id="lbar"></div></div>
+  <div class="l-msg" id="lmsg">Ищем выживших...</div>
+</div>
+
+<div id="gs">
+  <header class="hdr">
+    <div class="hdr-logo">БУНКЕР</div>
+    <div class="hdr-mid"><span class="hdr-dot"></span><span id="phase-label">Раскрытие</span></div>
+    <div class="hdr-round" id="round-label">Круг 1</div>
+  </header>
+
+  <div class="disaster">
+    <div class="dis-tag">Катастрофа</div>
+    <div class="dis-text" id="dis-text"></div>
+  </div>
+
+  <div class="turn-banner" id="turn-banner">
+    <div class="turn-indicator">Ход:</div>
+    <div class="turn-who" id="turn-who">—</div>
+  </div>
+
+  <div class="bots-wrap">
+    <div class="sec-label">Участники — <span id="alive-count">6</span> в бункере</div>
+    <div class="bots-grid" id="bots-grid"></div>
+  </div>
+
+  <div class="vote-wrap" id="vote-wrap">
+    <div class="vote-title">Голосование</div>
+    <div class="vote-btns" id="vote-btns"></div>
+  </div>
+
+  <div class="player-wrap">
+    <div class="player-hdr">
+      <div class="player-id">
+        <div class="p-avatar" id="p-avatar">
+            <img src="media/big.jpg" alt="Unpenkrs" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+        </div>
+        <div class="p-name"   id="p-name">Игрок</div>
+        <div class="imm-badge">ИММУНИТЕТ</div>
+      </div>
+      <div class="cards-hint" id="cards-hint">Дождись своей очереди</div>
+    </div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </div>
+
+  <div class="log" id="log"></div>
+</div>
+
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-t" id="modal-t"></div>
+    <div class="modal-b" id="modal-b"></div>
+    <button class="modal-btn" onclick="restartGame()">Играть снова</button>
+  </div>
+</div>
+
+<script>
+const BOT_NAMES = ['Санек','Данек (Прокопьев)','Денчик','Пашок','Женек','Егор'];
+
+const DISASTERS = [
+  'Ядерная война — заражение 90% территории',
+  'Пандемия неизвестного вируса — летальность 97%',
+  'Столкновение с астероидом — сдвиг оси Земли',
+  'Суперизвержение Йеллоустоуна — ядерная зима',
+  'Солнечная вспышка — гибель всей электроники',
+];
+
+const CARD_TYPES = [
+  { key:'profession', label:'Профессия', icon:'💼' },
+  { key:'health',     label:'Здоровье',  icon:'🩺' },
+  { key:'hobby',      label:'Хобби',     icon:'🎯' },
+  { key:'phobia',     label:'Фобия',     icon:'😱' },
+  { key:'baggage',    label:'Багаж',     icon:'🎒' },
+  { key:'extra',      label:'Доп. инфо', icon:'📋' },
+];
+
+const POOLS = {
+  profession:['Врач-хирург','Ядерный физик','Агроном','Инженер-строитель','Биохимик','Военный тактик','Психолог','Электрик','Шеф-повар','Механик','Ветеринар','Акушер','Эпидемиолог','Сантехник','Охотник'],
+  health:    ['Абсолютно здоров','Близорукость (−6)','Диабет 2 типа','Хроническая астма','Аллергия на пыльцу','Здоров, вакцинирован','ВИЧ-позитивный','Потеря слуха 30%','Инфаркт в анамнезе','Идеальное здоровье','Хронический бронхит','Полностью здоров'],
+  hobby:     ['Огородничество','Стрельба из лука','Радиолюбительство','Рыбалка','Выживание в дикой природе','Скалолазание','Кулинария','Охота','Медитация','Вязание','Шахматы','Садоводство'],
+  phobia:    ['Клаустрофобия','Арахнофобия','Никтофобия','Агорафобия','Гидрофобия','Боязнь высоты','Социофобия','Дентофобия','Нет фобий','Пирофобия','Гематофобия','Трипофобия'],
+  baggage:   ['Медицинская аптечка','Набор инструментов','Семена растений','Радиостанция','Запас консервов (6 мес)','Портативный генератор','Набор для рыбалки','Верёвки и тросы','Энциклопедия выживания','Мультитул Leatherman','Химическая лаборатория'],
+  extra:     ['Знает три языка','Служил в армии 5 лет','Умеет шить и кроить','Опыт строительства домов','Прошёл курс первой помощи','Знает азбуку Морзе','Умеет управлять трактором','Разбирается в химии','Мастер спорта по борьбе','Знает астрономию'],
+};
+
+// Свои фразы для ботов
+const PHRASES = {
+  generic: ['Надо подумать...', 'Кто-то тут явно лишний.', 'Моя профа точно пригодится.', 'Не торопитесь выкидывать.', 'Ищем слабое звено.'],
+  reveal:  ['Смотрите и учитесь.', 'Ну, вот как-то так.', 'Это нам точно поможет.', 'В бункере без этого никуда.', 'Надеюсь, это вас убедит.'],
+  react:   ['Ахаха, порно актёр? Серьезно?', 'Ну, в бункере будет не скучно...', 'Это типа для поднятия морали?', 'Ого, вот это специальность...'],
+  vote:    ['Сорян, но мой голос против тебя.', 'Ты нам не подходишь.', 'Удачи выжить на поверхности.', 'Ничего личного.']
+};
+
+let G = {
+  bots:         [],
+  playerCards:  {},
+  playerName:   '',
+  disaster:     '',
+  turnOrder:    [],
+  turnIdx:      0,
+  circle:       1,
+  phase:        'reveal',
+  sharedCards:  new Set(),
+  circleRevealed: {},
+};
+
+const rand    = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];} return b; };
+
+function ts() {
+  const d=new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function log(text, cls='') {
+  const el  = document.getElementById('log');
+  const row = document.createElement('div');
+  row.className = 'log-row';
+  row.innerHTML = `<span class="ts">${ts()}</span><span class="${cls}">${text}</span>`;
+  el.prepend(row);
+  while (el.children.length > 60) el.removeChild(el.lastChild);
+}
+
+const L_MSGS = ['Ищем выживших...','Подбираем участников...','Формируем бункер...','Генерируем катастрофу...','Раздаём карты...','Начинаем.'];
+
+function runLoader() {
+  const bar  = document.getElementById('lbar');
+  const msg  = document.getElementById('lmsg');
+  const dots = document.querySelectorAll('.l-dot');
+  let pct=0, mi=0;
+  const iv = setInterval(() => {
+    pct += Math.random()*8+3;
+    if (pct>100) pct=100;
+    bar.style.width = pct+'%';
+    if (pct >= mi*(100/L_MSGS.length) && mi < L_MSGS.length) {
+      msg.textContent = L_MSGS[mi];
+      if (dots[mi]) dots[mi].classList.add('on');
+      mi++;
+    }
+    if (pct>=100) { clearInterval(iv); setTimeout(startGame,400); }
+  }, 75);
+}
+
+function startGame() {
+  document.getElementById('ls').style.display = 'none';
+  document.getElementById('gs').style.display = 'flex';
+
+  G.playerName = localStorage.getItem('playerName') || 'Unpenkrs';
+  // Строка с перезаписью буквы удалена
+  document.getElementById('p-name').textContent = G.playerName;
+
+  G.disaster = rand(DISASTERS);
+  document.getElementById('dis-text').textContent = G.disaster;
+
+  G.playerCards = {
+    profession: 'Порно актёр',
+    health:     rand(POOLS.health),
+    hobby:      rand(POOLS.hobby),
+    phobia:     rand(POOLS.phobia),
+    baggage:    rand(POOLS.baggage),
+    extra:      rand(POOLS.extra),
+  };
+  G.sharedCards = new Set();
+
+  G.bots = BOT_NAMES.map(name => ({
+    name, eliminated: false,
+    revealedTotal: 0,
+    lastChip: '',
+    status: '',
+    cards: {
+      profession: rand(POOLS.profession), health: rand(POOLS.health),
+      hobby:      rand(POOLS.hobby),      phobia: rand(POOLS.phobia),
+      baggage:    rand(POOLS.baggage),    extra:  rand(POOLS.extra),
+    },
+  }));
+
+  G.circle = 1;
+  G.phase  = 'reveal';
+  G.circleRevealed = {};
+
+  renderBots();
+  renderPlayerCards();
+  updateAlive();
+
+  log(`Катастрофа: ${G.disaster}`, 'r');
+  log(`${G.playerName} входит в бункер.`, 'gr');
+
+  setTimeout(beginCircle, 800);
+}
+
+function beginCircle() {
+  G.phase  = 'reveal';
+  G.circleRevealed = {};
+  document.getElementById('phase-label').textContent = 'Раскрытие';
+  document.getElementById('round-label').textContent = `Круг ${G.circle}`;
+
+  const aliveIdxs = G.bots.map((b,i)=>i).filter(i=>!G.bots[i].eliminated);
+  G.turnOrder = [...aliveIdxs, 'player'];
+  G.turnIdx   = 0;
+
+  lockPlayerCards(true);
+  updateHint();
+  nextTurn();
+}
+
+function nextTurn() {
+  if (G.phase === 'end') return;
+
+  while (G.turnIdx < G.turnOrder.length) {
+    const who = G.turnOrder[G.turnIdx];
+    if (who === 'player' || !G.bots[who].eliminated) break;
+    G.turnIdx++;
+  }
+
+  if (G.turnIdx >= G.turnOrder.length) {
+    onCircleDone();
+    return;
+  }
+
+  const who = G.turnOrder[G.turnIdx];
+
+  if (who === 'player') {
+    activateTurnBanner('player');
+    lockPlayerCards(false);
+    updateHint();
+  } else {
+    activateTurnBanner(who);
+    lockPlayerCards(true);
+    updateHint();
+    const delay = 1000 + Math.random()*1200;
+    setTimeout(() => botTakeTurn(who), delay);
+  }
+}
+
+function botTakeTurn(botIdx) {
+  if (G.phase !== 'reveal') return;
+  const bot = G.bots[botIdx];
+
+  const cardKeys   = Object.keys(bot.cards);
+  const available  = cardKeys.filter((_,i) => i >= bot.revealedTotal);
+  if (available.length === 0) {
+    G.turnIdx++;
+    nextTurn();
+    return;
+  }
+
+  const key       = cardKeys[bot.revealedTotal];
+  const ct        = CARD_TYPES.find(c=>c.key===key);
+
+  bot.revealedTotal++;
+  bot.lastChip    = `${ct.icon} ${ct.label}`;
+  bot.status      = rand(PHRASES.reveal);
+  G.circleRevealed[botIdx] = key;
+
+  updateBot(botIdx);
+  // Пишем в чат, какую именно карту открыл бот
+  log(`${bot.name} открыл: ${ct.label} — ${bot.cards[key]}`);
+
+  highlightBot(botIdx, true);
+  setTimeout(() => {
+    highlightBot(botIdx, false);
+    G.turnIdx++;
+    nextTurn();
+  }, 900);
+}
+
+function playerShareCard(cardIdx) {
+  const who = G.turnOrder[G.turnIdx];
+  if (who !== 'player') return;
+  if (G.sharedCards.has(cardIdx)) return;
+  if ('player' in G.circleRevealed) return;
+
+  G.sharedCards.add(cardIdx);
+  G.circleRevealed['player'] = cardIdx;
+
+  const ct = CARD_TYPES[cardIdx];
+
+  const card = document.getElementById(`pc${cardIdx}`);
+  if (card) {
+    card.classList.add('shared','flash','my-turn-highlight');
+    card.addEventListener('animationend', ()=>card.classList.remove('flash'), {once:true});
+    if (!card.querySelector('.shared-tag')) {
+      const tag = document.createElement('div');
+      tag.className = 'shared-tag'; tag.textContent = 'Открыта'; card.prepend(tag);
+    }
+    const btn = document.getElementById(`pcb${cardIdx}`);
+    if (btn) { btn.textContent = 'Открыта'; btn.disabled = true; }
+  }
+
+  // Выводим в лог чата карту, которую открыл игрок
+  log(`${G.playerName} открыл: ${ct.label} — ${G.playerCards[ct.key]}`);
+  
+  if (ct.key === 'profession') setTimeout(()=>botReact('react'), 700);
+
+  lockPlayerCards(true);
+  updateHint();
+
+  G.turnIdx++;
+  setTimeout(() => nextTurn(), 600);
+}
+
+function onCircleDone() {
+  log(`Круг ${G.circle} завершён. Голосование!`, 'g');
+  hideTurnBanner();
+  setTimeout(startVoting, 1000);
+}
+
+function activateTurnBanner(who) {
+  const el   = document.getElementById('turn-who');
+  const wrap = document.getElementById('turn-banner');
+  wrap.style.display = 'flex';
+  if (who === 'player') {
+    el.textContent = G.playerName + ' (Твой ход)';
+    el.className   = 'turn-who my';
+  } else {
+    el.textContent = G.bots[who].name;
+    el.className   = 'turn-who bot';
+  }
+}
+
+function hideTurnBanner() {
+  document.getElementById('turn-banner').style.display = 'none';
+}
+
+function updateHint() {
+  const hint = document.getElementById('cards-hint');
+  const who  = G.turnOrder[G.turnIdx];
+  if (G.phase !== 'reveal') { hint.textContent = ''; return; }
+  if (who === 'player') {
+    const next = CARD_TYPES.findIndex((_,i)=>!G.sharedCards.has(i));
+    hint.textContent = next === -1 ? 'Все карты открыты' : 'Выбери карту для раскрытия ↓';
+  } else {
+    hint.textContent = 'Дождись своей очереди';
+  }
+}
+
+function lockPlayerCards(locked) {
+  CARD_TYPES.forEach((_,idx)=>{
+    const card = document.getElementById(`pc${idx}`);
+    if (!card) return;
+    const btn  = document.getElementById(`pcb${idx}`);
+    if (G.sharedCards.has(idx)) return;
+    if (locked) {
+      card.classList.add('locked');
+      card.classList.remove('my-turn-highlight');
+      if (btn) btn.disabled = true;
+    } else {
+      card.classList.remove('locked');
+      card.classList.add('my-turn-highlight');
+      if (btn) btn.disabled = false;
+    }
+  });
+}
+
+function highlightBot(idx, on) {
+  const d = document.getElementById(`bot${idx}`);
+  if (d) d.classList.toggle('active-turn', on);
+}
+
+function renderBots() {
+  const grid = document.getElementById('bots-grid');
+  grid.innerHTML = '';
+  G.bots.forEach((bot, i) => {
+    const d = document.createElement('div');
+    d.className = 'bot' + (bot.eliminated ? ' out' : '');
+    d.id = `bot${i}`;
+    const pips = Object.keys(bot.cards).map((_,si)=>
+      `<div class="pip ${si < bot.revealedTotal ? 'open' : ''}"></div>`
+    ).join('');
+    d.innerHTML = `
+      <div class="bot-name">${bot.name}</div>
+      <div class="bot-pips">${pips}</div>
+      ${bot.lastChip ? `<div class="bot-reveal-chip">${bot.lastChip}</div>` : ''}
+      <div class="bot-msg" id="bm${i}">${bot.status ? `"${bot.status}"` : ''}</div>`;
+    grid.appendChild(d);
+  });
+}
+
+function updateBot(i) {
+  const bot = G.bots[i];
+  const d   = document.getElementById(`bot${i}`);
+  if (!d) return;
+  d.className = 'bot' + (bot.eliminated ? ' out' : '');
+  d.querySelectorAll('.pip').forEach((p,si) => p.classList.toggle('open', si < bot.revealedTotal));
+  let chip = d.querySelector('.bot-reveal-chip');
+  if (bot.lastChip) {
+    if (!chip) { chip = document.createElement('div'); chip.className='bot-reveal-chip'; d.insertBefore(chip, d.querySelector('.bot-msg')); }
+    chip.textContent = bot.lastChip;
+  } else if (chip) { chip.remove(); }
+  const bm = document.getElementById(`bm${i}`);
+  if (bm) bm.textContent = bot.status ? `"${bot.status}"` : '';
+}
+
+function renderPlayerCards() {
+  const grid = document.getElementById('cards-grid');
+  grid.innerHTML = '';
+  CARD_TYPES.forEach((ct, idx) => {
+    const value    = G.playerCards[ct.key];
+    const shared   = G.sharedCards.has(idx);
+    const isSpec   = ct.key === 'profession';
+    const d = document.createElement('div');
+    d.className = 'pcard' + (shared ? ' shared locked' : ' locked');
+    d.id = `pc${idx}`;
+    d.innerHTML = `
+      ${shared ? '<div class="shared-tag">Открыта</div>' : ''}
+      <div class="pc-head">
+        <span class="pc-icon">${ct.icon}</span>
+        <span class="pc-type">${ct.label}</span>
+      </div>
+      <div class="pc-body">
+        <div class="pc-val ${isSpec?'special':''}">${value}</div>
+      </div>
+      <div class="pc-foot">
+        <button class="pc-btn" id="pcb${idx}"
+          onclick="playerShareCard(${idx})"
+          ${shared ? 'disabled' : 'disabled'}>
+          ${shared ? 'Открыта' : 'Показать карту'}
+        </button>
+      </div>`;
+    grid.appendChild(d);
+  });
+}
+
+function updateAlive() {
+  document.getElementById('alive-count').textContent = G.bots.filter(b=>!b.eliminated).length;
+}
+
+function botReact(type) {
+  const pool  = PHRASES[type] || PHRASES.generic;
+  const alive = G.bots.filter(b=>!b.eliminated);
+  shuffle(alive).slice(0,2).forEach((bot,i) => {
+    setTimeout(() => {
+      const idx = G.bots.indexOf(bot);
+      bot.status = rand(pool);
+      updateBot(idx);
+      log(`${bot.name}: "${bot.status}"`);
+    }, i*700);
+  });
+}
+
+function idleChatter() {
+  if (G.phase === 'end') return;
+  const who = G.turnOrder ? G.turnOrder[G.turnIdx] : null;
+  if (who === 'player') { setTimeout(idleChatter, 6000); return; }
+  const bot = G.bots.filter(b=>!b.eliminated).length > 0 ? rand(G.bots.filter(b=>!b.eliminated)) : null;
+  if (bot) {
+    const i = G.bots.indexOf(bot);
+    bot.status = rand(PHRASES.generic);
+    updateBot(i);
+    log(`${bot.name}: "${bot.status}"`);
+  }
+  setTimeout(idleChatter, 7000 + Math.random()*5000);
+}
+
+function startVoting() {
+  G.phase = 'vote';
+  document.getElementById('phase-label').textContent = 'Голосование';
+  hideTurnBanner();
+  lockPlayerCards(true);
+
+  const wrap = document.getElementById('vote-wrap');
+  wrap.classList.add('on');
+  const btns = document.getElementById('vote-btns');
+  btns.innerHTML = '';
+
+  G.bots.filter(b=>!b.eliminated).forEach(bot => {
+    const b = document.createElement('button');
+    b.className = 'vbtn';
+    b.textContent = `Изгнать: ${bot.name}`;
+    b.addEventListener('click', ()=>playerVote(bot));
+    btns.appendChild(b);
+  });
+
+  log('Голосование. Кого изгнать?', 'r');
+  setTimeout(botsVote, 1000);
+}
+
+function playerVote(bot) {
+  if (G.phase !== 'vote') return;
+  G.phase = 'resolving';
+  document.getElementById('vote-wrap').classList.remove('on');
+  log(`${G.playerName} голосует.`, 'r');
+  setTimeout(()=>eliminate(bot), 900);
+}
+
+function botsVote() {
+  const alive = G.bots.filter(b=>!b.eliminated);
+  if (alive.length < 2) return;
+  alive.forEach((voter,vi) => {
+    setTimeout(() => {
+      const targets = alive.filter((_,ti)=>ti!==vi);
+      if (!targets.length) return;
+      voter.status = rand(PHRASES.vote);
+      updateBot(G.bots.indexOf(voter));
+      log(`${voter.name}: "${voter.status}"`);
+    }, vi*500);
+  });
+}
+
+function eliminate(bot) {
+  bot.eliminated = true; bot.status = '';
+  updateBot(G.bots.indexOf(bot));
+  updateAlive();
+  log(`${bot.name} изгнан!`, 'r');
+
+  const alive = G.bots.filter(b=>!b.eliminated);
+  if (alive.length === 0) { setTimeout(()=>endGame('win'),1200); return; }
+
+  G.circle++;
+  G.phase = 'reveal';
+  setTimeout(beginCircle, 2000);
+}
+
+function endGame(res) {
+  G.phase = 'end';
+  const bg = document.getElementById('modal-bg');
+  const t  = document.getElementById('modal-t');
+  const b  = document.getElementById('modal-b');
+  bg.classList.add('on');
+  if (res==='win') {
+    t.textContent='Выжил'; t.className='modal-t win';
+    b.innerHTML=`Все изгнаны.<br><strong>${G.playerName}</strong> остаётся в бункере.<br><br><span style="color:#888;font-size:0.9rem;text-transform:uppercase;">Профессия: Порно актёр</span>`;
+    log('Главный игрок выжил!','gr');
+  } else {
+    t.textContent='Изгнан'; t.className='modal-t lose';
+    b.textContent='Бункер закрыт. Удачи снаружи.';
+    log('Игра окончена.','r');
+  }
+}
+
+function restartGame() {
+  document.getElementById('modal-bg').classList.remove('on');
+  document.getElementById('vote-wrap').classList.remove('on');
+  document.getElementById('log').innerHTML='';
+  startGame();
+}
+
+window.addEventListener('DOMContentLoaded', runLoader);
+</script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рассмотрение жалобы - Бункер онлайн 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        
+        .detail-cont {
+            background-color: #1e1e1e;
+            padding: 40px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #888888;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 10px;
+        }
+
+        .meta strong {
+            color: #ffffff;
+        }
+
+        .complaint-text {
+            background-color: #121212;
+            border: 1px solid #333333;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: left;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-size: 1.05rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-ban {
+            background-color: #d32f2f;
+            color: #ffffff;
+        }
+
+        .btn-ban:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-ban:active {
+            transform: scale(0.96);
+        }
+
+        .btn-warn {
+            background-color: #333333;
+            color: #ffffff;
+            border: 1px solid #555555;
+        }
+
+        .btn-warn:hover {
+            background-color: #444444;
+            border-color: #888888;
+        }
+
+        .btn-warn:active {
+            transform: scale(0.96);
+        }
+
+        .back {
+            display: inline-block;
+            color: #888888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .back:hover {
+            color: #ffffff;
+        }
+
+        @media (max-width: 450px) {
+            .detail-cont {
+                padding: 30px 20px;
+                border-radius: 0;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="detail-cont">
+        <div class="meta">
+            <span>Отправитель: <strong>Ne_Nishchiy</strong></span>
+            <span>Нарушитель: <strong>Egor</strong></span>
+        </div>
+
+        <div class="complaint-text">
+            "Игрок Петрушка всю игру оскорблял участников в чате, руинил процесс голосования и отказывался отыгрывать свою карточку. Требую принять меры!"
+        </div>
+
+        <div class="actions">
+            <a href="complaints-3.html" class="btn btn-ban">Выдать бан</a>
+            <a href="complaints-3.html" class="btn btn-warn">Предупреждение</a>
+        </div>
+
+        <a href="complaints-2.html" class="back">← Отмена</a>
+    </main>
+
+</body>
+</html>

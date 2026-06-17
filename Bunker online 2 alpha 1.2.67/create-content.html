@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание контента - Бункер онлайн 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .creator-cont {
+            background-color: #1e1e1e;
+            padding: 40px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #d32f2f;
+        }
+
+        p.subtitle {
+            color: #888888;
+            margin-bottom: 30px;
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: #888888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            background-color: #121212;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            padding: 12px 15px;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #d32f2f;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn-submit {
+            display: block;
+            width: 100%;
+            background-color: #d32f2f;
+            color: #ffffff;
+            border: none;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .btn-submit:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .back {
+            display: inline-block;
+            color: #888888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.2s ease;
+        }
+
+        .back:hover {
+            color: #ffffff;
+        }
+
+        @media (max-width: 450px) {
+            .creator-cont {
+                padding: 30px 20px;
+                border-radius: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="creator-cont">
+        <h2>Создание контента</h2>
+        <p class="subtitle">Панель редактора игровых паков</p>
+
+        <form action="#" method="POST">
+            <div class="form-group">
+                <label for="content-type">Тип создаваемого контента</label>
+                <select id="content-type">
+                    <option value="profession">Профессия</option>
+                    <option value="zdorovie">Здоровье</option>
+                    <option value="hobby">Хобби</option>
+                    <option value="fobia">Фобии</option>
+                    <option value="luggage">Багаж</option>
+                    <option value="Dop.sved">Доп.Сведения</option>
+                    <option value="catastrophe">Сценарий катастрофы</option>
+                    <option value="pack">Тематический набор карт (Пак)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="content-title">Название карты / Набора</label>
+                <input type="text" id="content-title" placeholder="Например: Программист, Постапокалипсис, Киберпанк пак" required>
+            </div>
+
+            <div class="form-group">
+                <label for="content-desc">Описание / Текст карточки</label>
+                <textarea id="content-desc" placeholder="Введите условия характеристики, художественное описание катастрофы или состав пака карт..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">Опубликовать в игру</button>
+        </form>
+
+        <a href="index-Umbra.html" class="back">← На главную</a>
+    </main>
+
+</body>
+</html>
